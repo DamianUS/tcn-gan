@@ -83,5 +83,4 @@ class TemporalConvNet(nn.Module):
         self.network = nn.Sequential(*layers)
 
     def forward(self, x):
-        source_seq = x[:, :self.input_len, :]
-        return self.network(source_seq.permute(0,2,1)).permute(0,2,1)
+        return self.network(x.permute(0,2,1)).permute(0,2,1)
