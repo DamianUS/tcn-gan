@@ -179,7 +179,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--n_clip',
         default=5,
-        type=float)
+        type=int)
     parser.add_argument(
         '--dropout',
         default=0,
