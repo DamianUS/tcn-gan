@@ -69,7 +69,7 @@ class TemporalBlock(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, noise_length=100, sequence_length=None, activation=nn.LeakyReLU, final_activation=nn.Tanh, hidden_size=256):
+    def __init__(self, noise_length=100, sequence_length=None, activation=nn.LeakyReLU, final_activation=nn.Tanh, hidden_size=512):
         super().__init__()
         self.layers = nn.Sequential(
             nn.Linear(noise_length, hidden_size),
