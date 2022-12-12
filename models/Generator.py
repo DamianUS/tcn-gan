@@ -33,6 +33,8 @@ class CausalConv1d(torch.nn.Conv1d):
 class TemporalBlock(nn.Module):
     def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
         super(TemporalBlock, self).__init__()
+        self.bn1 = nn.BatchNorm1d(n_outputs)
+        self.leaky_relu_1 = nn.LeakyReLU()
         self.causal1 = CausalConv1d(in_channels = n_inputs,
                  out_channels = n_outputs,
                  kernel_size = kernel_size,
@@ -40,8 +42,8 @@ class TemporalBlock(nn.Module):
                  dilation = dilation,
                  groups=1,
                  bias=True)
-        self.bn1 = nn.BatchNorm1d(n_outputs)
-        self.leaky_relu_1 = nn.LeakyReLU()
+        self.bn2 = nn.BatchNorm1d(n_outputs)
+        self.leaky_relu_2 = nn.LeakyReLU()
         self.causal2 = CausalConv1d(in_channels=n_outputs,
                                     out_channels=n_outputs,
                                     kernel_size=kernel_size,
@@ -49,8 +51,6 @@ class TemporalBlock(nn.Module):
                                     dilation=dilation,
                                     groups=1,
                                     bias=True)
-        self.bn2 = nn.BatchNorm1d(n_outputs)
-        self.leaky_relu_2 = nn.LeakyReLU()
         self.net = nn.Sequential(self.causal1, self.bn1, self.leaky_relu_1,
                                  self.causal2, self.bn2, self.leaky_relu_2,)
         self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
@@ -84,4 +84,4 @@ class TemporalConvNet(nn.Module):
 
     def forward(self, x):
         source_seq = x[:, :self.input_len, :]
-        return self.network(source_seq.permute(0,2,1)).permute(0,2,1)
+        return torch.tanh(self.network(source_seq.permute(0,2,1)).permute(0,2,1))
