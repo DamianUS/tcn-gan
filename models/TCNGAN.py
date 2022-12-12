@@ -17,7 +17,7 @@ class TCNGAN(torch.nn.Module):
         assert obj in ['generator','discriminator'], "obj must be either generator or discriminator"
         if obj == 'generator':
             device = next(self.parameters()).device
-            noise = torch.randn((self.batch_size, self.seq_len, self.num_features)).float().to(device)
+            noise = torch.randn((self.batch_size, 100, self.num_features)).float().to(device)
             return self.generator(noise)
         elif obj == 'discriminator':
             return self.discriminator(X)

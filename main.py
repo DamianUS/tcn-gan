@@ -91,8 +91,8 @@ def main(args):
         scaled_x_train_tensor, scaled_y_train_tensor = recover_checkpoint_data(experiment_root_directory_name=experiment_root_directory_name)
     else:
         os.makedirs(experiment_root_directory_name, exist_ok=True)
-        parameters_text_file = open(experiment_root_directory_name + "parameters.txt", "w")
-        parameters_text_file.write(repr(args))
+        with open(experiment_root_directory_name + "parameters.txt", "w") as parameters_text_file:
+            parameters_text_file.write(repr(args))
         scaled_x_train_tensor, scaled_y_train_tensor = recover_ori_data(experiment_root_directory_name=experiment_root_directory_name, seq_len=args.seq_len, scaling_method=scaling_method, trace=trace)
 
     train_data = TensorDataset(scaled_x_train_tensor.float(), scaled_y_train_tensor.float())
