@@ -25,7 +25,7 @@ def prepare_model(n_features, checkpoint):
     generator_kernel_size = checkpoint_context["generator_kernel_size"]
     discriminator_kernel_size = checkpoint_context["discriminator_kernel_size"]
     model = TCNGAN(num_features=n_features, seq_len=seq_len, batch_size=batch_size,
-                   generator_channels=generator_channels[:-1], discriminator_channels=discriminator_channels,
+                   generator_channels=generator_channels, discriminator_channels=discriminator_channels,
                    generator_kernel_size=generator_kernel_size, discriminator_kernel_size=discriminator_kernel_size,
                    dropout=dropout)
     model.to(args.device)
