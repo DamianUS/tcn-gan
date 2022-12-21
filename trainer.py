@@ -184,7 +184,7 @@ class StepByStep(object):
         except AttributeError:
             pass
         
-    def train(self, n_epochs, seed=42, n_clip = 5):
+    def train(self, n_epochs, seed=42, n_clip=5):
         # To ensure reproducibility of the training process
         self.set_seed(seed)
         self.n_clip = n_clip

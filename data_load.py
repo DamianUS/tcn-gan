@@ -22,7 +22,7 @@ def scale_data(ori_data, scaling_method='standard', scaler=None):
     if scaler is None:
         assert scaling_method in ['standard', 'minmax'], 'Only standard and minmax scalers are currently supported'
         if scaling_method == 'minmax':
-            scaler = MinMaxScaler()
+            scaler = MinMaxScaler(feature_range=(-1, 1))
             scaler.fit(reshaped_ori_data)
             scaler_params = [scaler.data_min_, scaler.data_max_]
 

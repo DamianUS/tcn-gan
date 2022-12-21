@@ -105,8 +105,8 @@ def main(args):
     model = TCNGAN(num_features=n_features, seq_len=seq_len, batch_size=batch_size, generator_channels=generator_channels, discriminator_channels=discriminator_channels, generator_kernel_size=generator_kernel_size, discriminator_kernel_size=discriminator_kernel_size, dropout=dropout)
     model.to(args.device)
     loss = nn.BCEWithLogitsLoss()
-    generator_optimizer = optim.Adam(model.generator.parameters(), lr=lr)
-    discriminator_optimizer = optim.Adam(model.discriminator.parameters(), lr=lr)
+    generator_optimizer = optim.Adam(model.generator.parameters(), lr=lr, betas=(0.5, 0.999))
+    discriminator_optimizer = optim.Adam(model.discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
 
     initial_epoch = 0
     initial_generator_losses = []
@@ -186,7 +186,7 @@ if __name__ == '__main__':
         type=float)
     parser.add_argument(
         '--scaling_method',
-        default='standard',
+        default='minmax',
         type=str)
     parser.add_argument(
         '--device',

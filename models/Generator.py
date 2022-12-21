@@ -33,8 +33,8 @@ class CausalConv1d(torch.nn.Conv1d):
 class TemporalBlock(nn.Module):
     def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
         super(TemporalBlock, self).__init__()
-        self.bn1 = nn.BatchNorm1d(n_outputs)
-        self.leaky_relu_1 = nn.LeakyReLU()
+        self.bn1 = nn.BatchNorm1d(n_inputs)
+        self.leaky_relu = nn.LeakyReLU(0.1)
         self.causal1 = CausalConv1d(in_channels = n_inputs,
                  out_channels = n_outputs,
                  kernel_size = kernel_size,
@@ -43,7 +43,6 @@ class TemporalBlock(nn.Module):
                  groups=1,
                  bias=True)
         self.bn2 = nn.BatchNorm1d(n_outputs)
-        self.leaky_relu_2 = nn.LeakyReLU()
         self.causal2 = CausalConv1d(in_channels=n_outputs,
                                     out_channels=n_outputs,
                                     kernel_size=kernel_size,
@@ -51,8 +50,8 @@ class TemporalBlock(nn.Module):
                                     dilation=dilation,
                                     groups=1,
                                     bias=True)
-        self.net = nn.Sequential(self.causal1, self.bn1, self.leaky_relu_1,
-                                 self.causal2, self.bn2, self.leaky_relu_2,)
+        self.net = nn.Sequential(self.bn1, self.leaky_relu, self.causal1,
+                                 self.bn2, self.leaky_relu, self.causal2)
         self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
         self.init_weights()
 
@@ -67,29 +66,12 @@ class TemporalBlock(nn.Module):
         res = x if self.downsample is None else self.downsample(x)
         return out + res
 
-
-class MLP(nn.Module):
-    def __init__(self, noise_length=100, sequence_length=None, activation=nn.LeakyReLU, final_activation=nn.Tanh, hidden_size=1024):
-        super().__init__()
-        self.layers = nn.Sequential(
-            nn.Linear(noise_length, hidden_size),
-            activation(),
-            nn.Linear(hidden_size, hidden_size),
-            activation(),
-            nn.Linear(hidden_size, hidden_size),
-            activation(),
-            nn.Linear(hidden_size, sequence_length),
-            final_activation(),
-        )
-    def forward(self, x):
-        return self.layers(x)
-
-
 class TemporalConvNet(nn.Module):
     def __init__(self, num_inputs, num_channels, kernel_size=2, seq_len=None, dropout=0.2, noise_length=100):
         super(TemporalConvNet, self).__init__()
         self.input_len = seq_len
-        self.mlp = MLP(noise_length=noise_length, sequence_length=seq_len)
+        self.num_inputs = num_inputs
+        self.linear = nn.Linear(noise_length, seq_len * num_inputs)
         layers = []
         num_levels = len(num_channels)
         for i in range(num_levels):
@@ -98,8 +80,13 @@ class TemporalConvNet(nn.Module):
             out_channels = num_channels[i]
             layers += [TemporalBlock(in_channels, out_channels, kernel_size, stride=1, dilation=dilation_size,
                                      padding=(kernel_size-1) * dilation_size, dropout=dropout)]
-        self.network = nn.Sequential(self.mlp, *layers)
+        self.output = nn.Sequential(
+            nn.Conv1d(num_channels[-1], num_inputs, kernel_size=1, padding=0, stride=1),
+            nn.Tanh()
+        )
+        self.tcn = nn.Sequential(*layers, self.output)
 
     def forward(self, x):
-        #x is the noise with shape batch_size, 100, n_features
-        return torch.tanh(self.network(x.permute(0,2,1)).permute(0,2,1))
+        #x is the noise with shape batch_size, 100
+        transformed_noise = self.linear(x).view(x.shape[0], self.num_inputs, -1)
+        return self.tcn(transformed_noise).permute(0, 2, 1)
