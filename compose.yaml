@@ -1,0 +1,19 @@
+services:
+  tcn-gan:
+    build:
+      context: .
+      args:
+        UID: ${UID}
+        GID: ${GID}
+        COMMANDS_PATH: ${COMMANDS_PATH}
+    working_dir: /tcn-gan
+    volumes:
+      - ./:/tcn-gan
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: ${COMMANDS_PATH}

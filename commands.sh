@@ -1,0 +1,2 @@
+python main.py --trace alibaba2018 --epochs 5 --seq_len 288 --batch_size 64 --generator_kernel_size 7 --generator_channels 25,25,25,25,25,25,25,25 --discriminator_kernel_size 3 --discriminator_channels 32,64,128,256 --dropout 0 --lr 0.0002 --device cpu --n_clip 5
+python predict.py --experiment_directory_path experiments/tcngan_trace-alibaba2018_gen_kernel-7_gen_channel-25-25-25-25-25-25-25-25_dis_kernel-3_dis_channel_32-64-128-256_dropout-0.0_lr-0.0002_scaling-minmax --recursive true --n_samples_export 5 --device cpu

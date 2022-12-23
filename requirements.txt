@@ -1,0 +1,12 @@
+numpy
+pandas
+scikit-learn
+scipy
+tqdm
+torch
+joblib
+matplotlib
+seaborn
+tensorboard
+datacentertracesdatasets
+natsort
