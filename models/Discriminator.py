@@ -9,9 +9,9 @@ class ConvolutionalBlock(nn.Module):
         self.relu = nn.ReLU()
         self.pooling = None
         self.net = nn.Sequential(self.conv2d, self.relu)
-        if pooling:
-            self.pooling = nn.AvgPool2d(kernel_size=n_outputs)
-            self.net = nn.Sequential(self.conv2d, self.relu, self.pooling)
+        # if pooling:
+        #     self.pooling = nn.AvgPool2d(kernel_size=n_outputs)
+        #     self.net = nn.Sequential(self.conv2d, self.relu, self.pooling)
         self.init_weights()
 
     def init_weights(self):
@@ -34,7 +34,8 @@ class Discriminator(nn.Module):
             out_channels = num_channels[i]
             self.layers += [ConvolutionalBlock(in_channels, out_channels, kernel_size, stride=stride, dilation=dilation,
                                      padding=padding)]
-        self.avg_pool = nn.AvgPool1d(kernel_size=seq_len)
+        #self.avg_pool = nn.AvgPool1d(kernel_size=num_channels[-1])
+        self.avg_pool = nn.AdaptiveAvgPool1d(1)
         self.linear = nn.Linear(num_channels[-1], 1)
         self.conv_network = nn.Sequential(*self.layers)
 
@@ -42,6 +43,7 @@ class Discriminator(nn.Module):
         #  ignoring target_seq until we decide if teacher forcing is necessary
         x = x.permute(0, 2, 1).unsqueeze(-1)
         conv_out = self.conv_network(x).squeeze(-1)
-        out_pool = self.avg_pool(conv_out).squeeze(-1)
+        #out_pool = self.avg_pool(conv_out).squeeze(-1)
+        out_pool = self.avg_pool(conv_out).view(conv_out.shape[0], -1)
         out_linear = self.linear(out_pool)
         return out_linear
