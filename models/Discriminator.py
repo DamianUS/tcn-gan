@@ -3,21 +3,19 @@ import torch.nn as nn
 
 
 class ConvolutionalBlock(nn.Module):
-    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, pooling=False):
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, pooling=True):
         super(ConvolutionalBlock, self).__init__()
-        self.conv2d = nn.utils.parametrizations.spectral_norm(nn.Conv2d(in_channels=n_inputs, out_channels=n_outputs, kernel_size=kernel_size, stride=stride, dilation=dilation, padding=padding))
+        self.conv1d = nn.utils.parametrizations.spectral_norm(nn.Conv1d(in_channels=n_inputs, out_channels=n_outputs, kernel_size=kernel_size, stride=stride, dilation=dilation, padding=padding))
         self.relu = nn.ReLU()
         self.pooling = None
-        self.net = nn.Sequential(self.conv2d, self.relu)
-        # if pooling:
-        #     self.pooling = nn.AvgPool2d(kernel_size=n_outputs)
-        #     self.net = nn.Sequential(self.conv2d, self.relu, self.pooling)
+        self.net = nn.Sequential(self.conv1d, self.relu)
+        if pooling:
+            self.pooling = nn.AvgPool1d(kernel_size=2)
+            self.net = nn.Sequential(self.conv1d, self.relu, self.pooling)
         self.init_weights()
 
     def init_weights(self):
-        self.conv2d.weight.data.normal_(0, 0.01)
-        if self.pooling is not None:
-            self.pooling.weight.data.normal_(0, 0.01)
+        self.conv1d.weight.data.normal_(0, 0.01)
 
     def forward(self, x):
         return self.net(x)
@@ -40,9 +38,8 @@ class Discriminator(nn.Module):
         self.conv_network = nn.Sequential(*self.layers)
 
     def forward(self, x):
-        #  ignoring target_seq until we decide if teacher forcing is necessary
-        x = x.permute(0, 2, 1).unsqueeze(-1)
-        conv_out = self.conv_network(x).squeeze(-1)
+        x = x.permute(0, 2, 1)
+        conv_out = self.conv_network(x)
         #out_pool = self.avg_pool(conv_out).squeeze(-1)
         out_pool = self.avg_pool(conv_out).view(conv_out.shape[0], -1)
         out_linear = self.linear(out_pool)
